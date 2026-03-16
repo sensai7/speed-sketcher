@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Speed Sketcher</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <main id="app">
+        
+        <section id="view-index" class="view active">
+            <header>
+                <h1 class="logo-placeholder">SPEED SKETCHER</h1>
+                <p class="subtitle">A tool for rapid artistic improvement through timed reference sketching.</p>
+                <p class="warning">Privacy Note: No images are uploaded. Processing happens entirely in your browser.</p>
+            </header>
+
+            <div class="config-panel">
+                <div class="input-group">
+                    <label for="folder-input" class="button accent">Select Image Folder</label>
+                    <input type="file" id="folder-input" webkitdirectory directory multiple hidden>
+                    <span id="file-count">No folder selected</span>
+                </div>
+
+                <div class="options">
+                    <div class="option-group">
+                        <label>Images per session:</label>
+                        <div class="radio-tiles" id="count-options">
+                            <label><input type="radio" name="img-count" value="4" checked> 4</label>
+                            <label><input type="radio" name="img-count" value="8"> 8</label>
+                            <label><input type="radio" name="img-count" value="12"> 12</label>
+                            <label><input type="radio" name="img-count" value="16"> 16</label>
+                        </div>
+                    </div>
+
+                    <div class="option-group">
+                        <label>Seconds per image:</label>
+                        <div class="radio-tiles" id="time-options">
+                            <label><input type="radio" name="duration" value="30"> 30s</label>
+                            <label><input type="radio" name="duration" value="60" checked> 60s</label>
+                            <label><input type="radio" name="duration" value="90"> 90s</label>
+                            <label><input type="radio" name="duration" value="120"> 120s</label>
+                        </div>
+                    </div>
+
+                    <div class="checkbox-group">
+                        <label><input type="checkbox" id="show-bar" checked> Visual Progress Bar</label>
+                        <label><input type="checkbox" id="show-num" checked> Numeric Timer</label>
+                        <label><input type="checkbox" id="enable-sound" checked> Play "Ping" sound</label>
+                    </div>
+                </div>
+
+                <button id="btn-start" class="button start" disabled>START SESSION</button>
+            </div>
+        </section>
+
+        <section id="view-countdown" class="view">
+            <div id="countdown-display">3</div>
+        </section>
+
+        <section id="view-timer" class="view">
+            <div class="image-container">
+                <img id="current-image" src="" alt="Reference">
+            </div>
+            <div id="timer-ui">
+                <div id="numeric-timer">60</div>
+                <div id="progress-container">
+                    <div id="progress-bar"></div>
+                </div>
+            </div>
+        </section>
+
+        <section id="view-results" class="view">
+            <h2>Session Results</h2>
+            <div id="results-gallery" class="gallery"></div>
+            
+            <div class="stats-box">
+                <h3>Session Stats</h3>
+                <p id="session-stats-text"></p>
+                <hr>
+                <h3>Lifetime Stats</h3>
+                <p id="lifetime-stats-text"></p>
+            </div>
+
+            <button id="btn-restart" class="button accent">Back to Home</button>
+        </section>
+
+    </main>
+
+    <audio id="ping-sound" src="ping.wav" preload="auto"></audio>
+    <script src="script.js"></script>
+</body>
+</html>
