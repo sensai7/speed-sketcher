@@ -45,6 +45,26 @@
                         </div>
                     </div>
 
+                    <div class="option-group">
+                        <label>Seed:</label>
+                        <div class="radio-tiles seed-mode-options">
+                            <label><input type="radio" name="seed-mode" value="random" checked> Random Seed</label>
+                            <label><input type="radio" name="seed-mode" value="user"> User Seed</label>
+                        </div>
+                        <div class="seed-input-row">
+                            <input
+                                type="text"
+                                id="seed-input"
+                                inputmode="numeric"
+                                maxlength="10"
+                                pattern="[0-9]{10}"
+                                placeholder="0123456789"
+                                disabled
+                            >
+                            <button type="button" id="copy-seed" class="button accent seed-copy">Copy</button>
+                        </div>
+                    </div>
+
                     <div class="checkbox-group">
                         <label><input type="checkbox" id="show-bar" checked> Visual Progress Bar</label>
                         <label><input type="checkbox" id="show-num" checked> Numeric Timer</label>
