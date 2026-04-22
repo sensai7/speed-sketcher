@@ -5,6 +5,7 @@ let timerInterval;
 let timeLeft = 0;
 let totalSessionTime = 0;
 let activeSeed = '';
+let previewImages = [];
 
 // Lifetime stats initialization
 let stats = JSON.parse(localStorage.getItem('sketchStats')) || { sessions: 0, images: 0, time: 0, lastSeed: '' };
@@ -20,6 +21,7 @@ const numericDisplay = document.getElementById('numeric-timer');
 const seedInput = document.getElementById('seed-input');
 const copySeedButton = document.getElementById('copy-seed');
 const seedModeInputs = document.querySelectorAll('input[name="seed-mode"]');
+const lifetimeStatsText = document.getElementById('lifetime-stats-text');
 
 // View Switcher
 function showView(viewId) {
@@ -116,6 +118,65 @@ async function copySeedToClipboard() {
     }
 }
 
+function updateLifetimeStats() {
+    lifetimeStatsText.innerText =
+        `Total Sessions: ${stats.sessions} | Total Images: ${stats.images} | Total Time: ${Math.floor(stats.time / 60)}m | Last Seed: ${stats.lastSeed || 'None'}`;
+}
+
+function renderGallery(galleryId, files) {
+    const gallery = document.getElementById(galleryId);
+    gallery.innerHTML = '';
+    gallery.dataset.count = files.length;
+
+    files.forEach(file => {
+        const img = document.createElement('img');
+        const url = URL.createObjectURL(file);
+        img.src = url;
+        img.onclick = () => window.open(url, '_blank');
+        gallery.appendChild(img);
+    });
+}
+
+function getActiveSeedValue({ requireUserSeed = false } = {}) {
+    const useUserSeed = getSelectedSeedMode() === 'user';
+
+    sanitizeSeedInput();
+
+    if (useUserSeed) {
+        if (!/^\d{10}$/.test(seedInput.value)) {
+            if (requireUserSeed) {
+                seedInput.focus();
+            }
+
+            return null;
+        }
+
+        return seedInput.value;
+    }
+
+    ensureSeedValue();
+    return seedInput.value;
+}
+
+function openPreviewFromHome() {
+    if (!document.getElementById('view-index').classList.contains('active') || images.length === 0) {
+        return;
+    }
+
+    const count = parseInt(document.querySelector('input[name="img-count"]:checked').value);
+    const previewSeed = getActiveSeedValue({ requireUserSeed: true });
+
+    if (!previewSeed) {
+        return;
+    }
+
+    previewImages = pickSeededImages(images, count, previewSeed);
+    renderGallery('preview-gallery', previewImages);
+    document.getElementById('preview-stats-text').innerText =
+        `Images: ${previewImages.length} | Seed: ${previewSeed}`;
+    showView('preview');
+}
+
 // Handle File Selection
 folderInput.addEventListener('change', (e) => {
     images = Array.from(e.target.files).filter(file => file.type.startsWith('image/'));
@@ -133,20 +194,13 @@ copySeedButton.addEventListener('click', copySeedToClipboard);
 // Start Session Logic
 btnStart.addEventListener('click', () => {
     const count = parseInt(document.querySelector('input[name="img-count"]:checked').value);
-    const useUserSeed = getSelectedSeedMode() === 'user';
+    const selectedSeed = getActiveSeedValue({ requireUserSeed: true });
 
-    sanitizeSeedInput();
-
-    if (useUserSeed && !/^\d{10}$/.test(seedInput.value)) {
-        seedInput.focus();
+    if (!selectedSeed) {
         return;
     }
 
-    if (!useUserSeed) {
-        ensureSeedValue();
-    }
-
-    activeSeed = seedInput.value;
+    activeSeed = selectedSeed;
     sessionImages = pickSeededImages(images, count, activeSeed);
     
     startCountdown();
@@ -227,27 +281,32 @@ function endSession() {
     stats.time += totalSessionTime;
     stats.lastSeed = activeSeed;
     localStorage.setItem('sketchStats', JSON.stringify(stats));
+    updateLifetimeStats();
 
     // Populate Gallery
-    const gallery = document.getElementById('results-gallery');
-    gallery.innerHTML = '';
-    gallery.dataset.count = sessionImages.length;
-
-    sessionImages.forEach(file => {
-        const img = document.createElement('img');
-        const url = URL.createObjectURL(file);
-        img.src = url;
-        img.onclick = () => window.open(url, '_blank');
-        gallery.appendChild(img);
-    });
+    renderGallery('results-gallery', sessionImages);
 
     // Populate Stats Text
     document.getElementById('session-stats-text').innerText = 
         `Images: ${sessionImages.length} | Time: ${Math.floor(totalSessionTime/60)}m ${totalSessionTime%60}s | Used seed: ${activeSeed}`;
-    
-    document.getElementById('lifetime-stats-text').innerText = 
-        `Total Sessions: ${stats.sessions} | Total Images: ${stats.images} | Total Time: ${Math.floor(stats.time/60)}m`;
 }
 
 document.getElementById('btn-restart').addEventListener('click', () => showView('index'));
+document.getElementById('btn-preview-back').addEventListener('click', () => showView('index'));
+document.addEventListener('keydown', (event) => {
+    if (event.repeat || event.key.toLowerCase() !== 't') {
+        return;
+    }
+
+    if (event.target instanceof HTMLElement) {
+        const tagName = event.target.tagName;
+        if (tagName === 'INPUT' || tagName === 'TEXTAREA') {
+            return;
+        }
+    }
+
+    openPreviewFromHome();
+});
+
 updateSeedControls();
+updateLifetimeStats();

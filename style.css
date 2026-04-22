@@ -100,6 +100,18 @@ body {
     width: 100%;
 }
 
+.home-stats {
+    margin-top: 24px;
+    text-align: left;
+    max-width: 100%;
+}
+
+.shortcut-hint {
+    color: var(--text-dim);
+    font-size: 0.95rem;
+    margin-top: 10px;
+}
+
 /* Timer View */
 #view-timer { background-color: var(--bg-timer); padding: 0; }
 .image-container { flex: 1; display: flex; align-items: center; justify-content: center; width: 100%; overflow: hidden; }
@@ -123,6 +135,18 @@ body {
     border-radius: 5px; cursor: pointer; border: 2px solid transparent; 
 }
 .gallery img:hover { border-color: var(--accent); }
+
+#view-results,
+#view-preview {
+    justify-content: flex-start;
+    padding-top: 48px;
+    overflow-y: auto;
+}
+
+#preview-stats-text {
+    color: var(--text-dim);
+    margin: 6px 0 0;
+}
 
 /* Grid Layouts */
 .gallery[data-count="4"] { grid-template-columns: repeat(2, 1fr); }

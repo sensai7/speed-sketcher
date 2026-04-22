@@ -72,6 +72,12 @@
                     </div>
                 </div>
 
+                <div class="stats-box home-stats">
+                    <h3>Lifetime Stats</h3>
+                    <p id="lifetime-stats-text"></p>
+                    <p class="shortcut-hint">Press <strong>T</strong> to preview the images for the current folder and seed.</p>
+                </div>
+
                 <button id="btn-start" class="button start" disabled>START SESSION</button>
             </div>
         </section>
@@ -99,12 +105,16 @@
             <div class="stats-box">
                 <h3>Session Stats</h3>
                 <p id="session-stats-text"></p>
-                <hr>
-                <h3>Lifetime Stats</h3>
-                <p id="lifetime-stats-text"></p>
             </div>
 
             <button id="btn-restart" class="button accent">Back to Home</button>
+        </section>
+
+        <section id="view-preview" class="view">
+            <h2>Image Preview</h2>
+            <p id="preview-stats-text"></p>
+            <div id="preview-gallery" class="gallery"></div>
+            <button id="btn-preview-back" class="button accent">Back to Home</button>
         </section>
 
     </main>
