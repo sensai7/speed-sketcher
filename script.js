@@ -6,6 +6,10 @@ let timeLeft = 0;
 let totalSessionTime = 0;
 let activeSeed = '';
 let previewImages = [];
+let sessionStartTimestamp = 0;
+let isUnlimitedSession = false;
+let canAdvanceImage = false;
+let manualAdvanceLockTimeout;
 
 // Lifetime stats initialization
 let stats = JSON.parse(localStorage.getItem('sketchStats')) || { sessions: 0, images: 0, time: 0, lastSeed: '' };
@@ -18,6 +22,8 @@ const btnStart = document.getElementById('btn-start');
 const imgDisplay = document.getElementById('current-image');
 const progressBar = document.getElementById('progress-bar');
 const numericDisplay = document.getElementById('numeric-timer');
+const progressContainer = document.getElementById('progress-container');
+const sessionControlsHint = document.getElementById('session-controls-hint');
 const seedInput = document.getElementById('seed-input');
 const copySeedButton = document.getElementById('copy-seed');
 const seedModeInputs = document.querySelectorAll('input[name="seed-mode"]');
@@ -79,6 +85,33 @@ function pickSeededImages(sourceImages, count, seed) {
 
 function getSelectedSeedMode() {
     return document.querySelector('input[name="seed-mode"]:checked').value;
+}
+
+function getSelectedDurationValue() {
+    return document.querySelector('input[name="duration"]:checked').value;
+}
+
+function getSessionElapsedSeconds() {
+    if (!sessionStartTimestamp) {
+        return totalSessionTime;
+    }
+
+    return Math.max(0, Math.floor((Date.now() - sessionStartTimestamp) / 1000));
+}
+
+function refreshManualAdvanceLock() {
+    canAdvanceImage = false;
+    clearTimeout(manualAdvanceLockTimeout);
+
+    manualAdvanceLockTimeout = window.setTimeout(() => {
+        canAdvanceImage = true;
+    }, 1000);
+}
+
+function advanceToNextImage() {
+    clearInterval(timerInterval);
+    currentIndex++;
+    loadNextImage();
 }
 
 function sanitizeSeedInput() {
@@ -224,8 +257,13 @@ function startCountdown() {
 }
 
 function startTimerSession() {
+    clearInterval(timerInterval);
     currentIndex = 0;
     totalSessionTime = 0;
+    sessionStartTimestamp = Date.now();
+    isUnlimitedSession = getSelectedDurationValue() === 'unlimited';
+    canAdvanceImage = false;
+    clearTimeout(manualAdvanceLockTimeout);
     showView('timer');
     loadNextImage();
 }
@@ -236,15 +274,22 @@ function loadNextImage() {
         return;
     }
 
-    const duration = parseInt(document.querySelector('input[name="duration"]:checked').value);
-    timeLeft = duration;
-    totalSessionTime += duration;
-    
-    // UI Visibility Toggles
-    progressBar.parentElement.style.display = document.getElementById('show-bar').checked ? 'block' : 'none';
-    numericDisplay.style.display = document.getElementById('show-num').checked ? 'block' : 'none';
-
     imgDisplay.src = URL.createObjectURL(sessionImages[currentIndex]);
+    sessionControlsHint.style.display = 'block';
+    refreshManualAdvanceLock();
+
+    if (isUnlimitedSession) {
+        timeLeft = 0;
+        progressContainer.style.display = 'none';
+        numericDisplay.style.display = 'none';
+        return;
+    }
+
+    const duration = parseInt(getSelectedDurationValue(), 10);
+    timeLeft = duration;
+
+    progressContainer.style.display = document.getElementById('show-bar').checked ? 'block' : 'none';
+    numericDisplay.style.display = document.getElementById('show-num').checked ? 'block' : 'none';
     runTimer(duration);
 }
 
@@ -256,12 +301,10 @@ function runTimer(duration) {
         updateTimerUI(duration);
 
         if (timeLeft <= 0) {
-            clearInterval(timerInterval);
             if (document.getElementById('enable-sound').checked) {
                 document.getElementById('ping-sound').play().catch(() => {});
             }
-            currentIndex++;
-            loadNextImage();
+            advanceToNextImage();
         }
     }, 1000);
 }
@@ -273,6 +316,8 @@ function updateTimerUI(max) {
 
 function endSession() {
     clearInterval(timerInterval);
+    clearTimeout(manualAdvanceLockTimeout);
+    totalSessionTime = getSessionElapsedSeconds();
     showView('results');
 
     // Update Lifetime Stats
@@ -294,15 +339,29 @@ function endSession() {
 document.getElementById('btn-restart').addEventListener('click', () => showView('index'));
 document.getElementById('btn-preview-back').addEventListener('click', () => showView('index'));
 document.addEventListener('keydown', (event) => {
-    if (event.repeat || event.key.toLowerCase() !== 't') {
-        return;
-    }
-
     if (event.target instanceof HTMLElement) {
         const tagName = event.target.tagName;
         if (tagName === 'INPUT' || tagName === 'TEXTAREA') {
             return;
         }
+    }
+
+    if (!event.repeat && document.getElementById('view-timer').classList.contains('active')) {
+        if (event.key === 'ArrowRight' || event.key === ' ' || event.key === 'Spacebar' || event.code === 'Space') {
+            event.preventDefault();
+
+            if (!canAdvanceImage) {
+                return;
+            }
+
+            canAdvanceImage = false;
+            advanceToNextImage();
+            return;
+        }
+    }
+
+    if (event.repeat || event.key.toLowerCase() !== 't') {
+        return;
     }
 
     openPreviewFromHome();
